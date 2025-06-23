@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cricket Player Performance Predictor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1f77b4, #2ca02c);
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .app-header {
+            text-align: center;
+            padding: 30px;
+            color: #fff;
+        }
+        .app-header h1 {
+            font-size: 2.5em;
+        }
+        .app-header p {
+            font-size: 1.2em;
+        }
+        .main-form {
+            background: #ffffffdd;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .btn-group {
+            text-align: center;
+        }
+        .btn-group button {
+            padding: 10px 30px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: none;
+            background-color: #1f77b4;
+            color: #fff;
+            cursor: pointer;
+        }
+        .btn-group button:hover {
+            background-color: #105582;
+        }
+        .results {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #ffffffdd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .results h2 {
+            font-size: 1.8em;
+        }
+    </style>
+</head>
+<body>
+<div class="app-header">
+    <h1>🏏 Cricket Player Performance Predictor</h1>
+    <p>Predict Runs or Wickets based on Player Role, Venue, and Recent Form</p>
+</div>
+
+<form method="POST" action="/predict" class="main-form">
+    <div class="form-group">
+        <label>🎭 Role:</label>
+        <select id="role" name="role" required onchange="fetchPlayers()">
+            {% for role_item in roles %}
+                <option value="{{ role_item }}" {% if role_item == selected_role %}selected{% endif %}>
+                    {{ role_item }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>👤 Player:</label>
+        <select id="player" name="player" required>
+            {% if selected_role and selected_player %}
+                <option value="{{ selected_player }}" selected>{{ selected_player }}</option>
+            {% endif %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>🏟️ Venue:</label>
+        <select name="venue" required>
+            {% for venue_item in venues %}
+                <option value="{{ venue_item }}" {% if venue_item == selected_venue %}selected{% endif %}>
+                    {{ venue_item }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>🏁 Opposition:</label>
+        <select name="opposition" required>
+            {% for opp_item in oppositions %}
+                <option value="{{ opp_item }}" {% if opp_item == selected_opposition %}selected{% endif %}>
+                    {{ opp_item }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="btn-group">
+        <button type="submit">Predict</button>
+    </div>
+</form>
+
+{% if prediction is not none or prediction_wickets is not none %}
+<div class="results">
+    <h2>Results</h2>
+    <div>📊 Recent Form: {{ recent_form_list }}</div>
+    <div>📈 Avg Recent Score: {{ avg_form }}</div>
+    {% if prediction is not none %}
+        <div>🎯 Predicted Runs: {{ prediction|round(2) }}</div>
+    {% endif %}
+    {% if prediction_wickets is not none %}
+        <div>🔥 Predicted Wickets: {{ prediction_wickets }}</div>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+function fetchPlayers() {
+    const role = document.getElementById("role").value;
+    fetch("/get_players", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "role=" + role
+    })
+    .then(response => response.json())
+    .then(data => {
+        const playerSelect = document.getElementById("player");
+        playerSelect.innerHTML = ""; // Clear old options
+        data.players.forEach(player => {
+            const option = document.createElement("option");
+            option.value = player;
+            option.textContent = player;
+            playerSelect.appendChild(option);
+        });
+    });
+}
+</script>
+</body>
+</html>
